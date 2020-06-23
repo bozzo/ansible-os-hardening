@@ -3,6 +3,18 @@
   package:
     name: '{{ modprobe_package }}'
     state: 'present'
+  when: not ostree_booted
+
+- name: install modprobe to disable filesystems | os-10 (rpm-ostree)
+  command: rpm-ostree install --idempotent --allow-inactive {{ modprobe_package }}
+  register: rpm_ostree_result
+  changed_when: rpm_ostree_result.stdout.find('No change.') == -1
+  when: ostree_booted
+
+- name: reboot when modprobe is installed (rpm-ostree)
+  reboot:
+    reboot_timeout: "{{ reboot_timeout | default(180) }}"
+  when: ostree_booted and rpm_ostree_result.stdout.find('No change.') == -1
 
 - name: check if efi is installed
   stat:

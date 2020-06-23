@@ -278,3 +278,6 @@ os_auditd_max_log_file_action: keep_logs
 os_selinux_state: enforcing
 # Set the SELinux polixy.
 os_selinux_policy: targeted
+
+# Reboot timeout for ostree based OS
+reboot_timeout: 180

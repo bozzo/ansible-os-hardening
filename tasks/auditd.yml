@@ -4,6 +4,18 @@
   package:
     name: '{{ auditd_package }}'
     state: 'present'
+  when: not ostree_booted
+
+- name: install auditd package | package-08 (rpm-ostree)
+  command: rpm-ostree install --idempotent {{ auditd_package }}
+  register: rpm_ostree_result
+  changed_when: rpm_ostree_result.stdout.find('No change.') == -1
+  when: ostree_booted
+
+- name: reboot when auditd is installed (rpm-ostree)
+  reboot:
+    reboot_timeout: "{{ reboot_timeout | default(180) }}"
+  when: ostree_booted and rpm_ostree_result.stdout.find('No change.') == -1
 
 - name: configure auditd | package-08
   template:

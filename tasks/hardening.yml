@@ -13,6 +13,15 @@
       skip: true
   tags: always
 
+- name: check if booted with ostree
+  stat:
+    path: /run/ostree-booted
+  register: ostree
+
+- name: set fact ostree_booted
+  set_fact:
+    ostree_booted: "{{ ostree.stat.exists }}"
+
 - import_tasks: auditd.yml
   tags: auditd
   when: os_auditd_enabled | bool

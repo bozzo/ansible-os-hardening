@@ -14,6 +14,18 @@
   package:
     name: '{{ os_packages_pam_ccreds }}'
     state: 'absent'
+  when: not ostree_booted
+
+- name: remove pam ccreds to disable password caching (rpm-ostree)
+  command: rpm-ostree uninstall --idempotent {{ os_packages_pam_ccreds }}
+  register: rpm_ostree_result
+  changed_when: rpm_ostree_result.stdout.find('No change.') == -1
+  when: ostree_booted
+
+- name: reboot when pam ccreds is uninstalled (rpm-ostree)
+  reboot:
+    reboot_timeout: "{{ reboot_timeout | default(180) }}"
+  when: ostree_booted and rpm_ostree_result.stdout.find('No change.') == -1
 
 - name: remove pam_cracklib, because it does not play nice with passwdqc
   apt:
@@ -121,6 +133,7 @@
 - name: Gather package facts
   package_facts:
     manager: auto
+  when: not ostree_booted
 
 - name: NSA 2.3.3.5 Upgrade Password Hashing Algorithm to SHA-512
   template:
@@ -129,4 +142,4 @@
     mode: '0640'
     owner: 'root'
     group: 'root'
-  when: "'libuser' in ansible_facts.packages"
+  when: "not ostree_booted and 'libuser' in ansible_facts.packages"
